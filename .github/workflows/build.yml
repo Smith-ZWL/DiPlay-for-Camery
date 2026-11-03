@@ -27,15 +27,15 @@ jobs:
           echo "${{ secrets.MFI_PK8_BASE64 }}" | base64 -d > ${{ env.DIPLAY_AUTH_ASSETS_DIR }}/identity.pk8
           echo "${{ secrets.MFI_P7B_BASE64 }}" | base64 -d > ${{ env.DIPLAY_AUTH_ASSETS_DIR }}/certificate.p7b
 
-      - name: 云端直接生成 repack.keystore（不用你电脑keytool！）
+      - name: 云端直接生成 repack.keystore
         run: |
           mkdir -p .signing
           keytool -genkeypair -v -keystore .signing/repack.keystore -keyalg RSA -keysize 2048 -validity 10000 \
           -alias ${{ env.KS_ALIAS }} -storepass ${{ env.KS_STOREPASS }} -keypass ${{ env.KS_KEYPASS }} \
           -dname "CN=user,OU=user,O=user,L=user,ST=user,C=CN"
 
-      - name: 赋予脚本权限
-        run: chmod +x gradlew scripts/provision-signing.sh
+      - name: 给gradlew权限
+        run: chmod +x gradlew
 
       - name: 编译（关闭友盟）
         run: ./gradlew :mobile:clean :mobile:assembleStandaloneRelease -Pdiplay.analytics=none
