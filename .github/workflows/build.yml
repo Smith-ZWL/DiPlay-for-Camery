@@ -35,10 +35,7 @@ jobs:
           -dname "CN=user,OU=user,O=user,L=user,ST=user,C=CN"
 
       - name: 给gradlew权限
-        run: chmod +x gradlew
-
-      - name: 编译（关闭友盟）
-        run: ./gradlew :mobile:clean :mobile:assembleStandaloneRelease -Pdiplay.analytics=none
+        run: chmod +x gradle
 
       - name: 上传成品APK
         uses: actions/upload-artifact@v4
