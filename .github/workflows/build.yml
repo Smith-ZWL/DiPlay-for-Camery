@@ -1,15 +1,12 @@
-name: 在线打包 Debug（Smith-ZWL 原项目，绕开签名脚本）
+name: 打包 assembleStandaloneDebug（匹配当前build.gradle）
 on:
   workflow_dispatch
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 拉取源码
+      - name: 拉源码
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
       - name: JDK17
         uses: actions/setup-java@v4
         with:
@@ -17,36 +14,30 @@ jobs:
           distribution: temurin
           cache: gradle
 
-      # 【关键】自动抹除 build.gradle 里面 checkSharedSigning 整块任务
-      - name: 删除坑人的 checkSharedSigning 代码块
+      # 重点：它要求证书放在 .private/runtime-assets/offline-mfi
+      - name: 创建它指定的证书目录、注入MFi证书
         run: |
-          sed -i '/task checkSharedSigning/,/^}/d' mobile/build.gradle
+          mkdir -p .private/runtime-assets/offline-mfi
+          echo "${{ secrets.MFI_PK8_BASE64 }}" | base64 -d > .private/runtime-assets/offline-mfi/identity.pk8
+          echo "${{ secrets.MFI_P7B_BASE64 }}" | base64 -d > .private/runtime-assets/offline-mfi/certificate.p7b
 
-      # 注入MFi证书
-      - name: 放入离线MFi证书
-        run: |
-          mkdir -p mobile/src/main/assets/offline-mfi
-          echo "${{ secrets.MFI_PK8_BASE64 }}" | base64 -d > mobile/src/main/assets/offline-mfi/identity.pk8
-          echo "${{ secrets.MFI_P7B_BASE64 }}" | base64 -d > mobile/src/main/assets/offline-mfi/certificate.p7b
-
-      - name: 给gradlew权限
+      - name: chmod gradlew
         run: chmod +x gradlew
 
-      # 只编译 Debug，不用 Release、不用不存在的 standaloneRelease
-      - name: Gradle 编译 Debug
-        run: ./gradlew :mobile:clean :mobile:assembleDebug --stacktrace
+      # ✅ 正确任务名： assembleStandaloneDebug，不是 Release！！
+      - name: Gradle编译
+        run: ./gradlew :mobile:clean :mobile:assembleStandaloneDebug --stacktrace
 
-      # 先搜索确认apk位置，找不到直接报错
-      - name: 查找APK
+      - name: 查找apk
         id: findapk
         run: |
           APK=$(find mobile/build -name "mobile-debug.apk")
           echo "apk_path=$APK" >> $GITHUB_OUTPUT
           echo "$APK"
 
-      - name: 上传成品APK
+      - name: 上传APK
         uses: actions/upload-artifact@v4
         with:
-          name: Camery-DiPlay-Debug
+          name: Camery-DiPlay-Standalone-Debug
           path: ${{ steps.findapk.outputs.apk_path }}
           if-no-files-found: error
