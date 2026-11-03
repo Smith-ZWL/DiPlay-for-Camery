@@ -1,9 +1,9 @@
-name: List gradle tasks
+name: List All Tasks
 on:
   workflow_dispatch
 
 jobs:
-  tasklist:
+  list:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,5 +14,5 @@ jobs:
           distribution: 'temurin'
       - name: chmod
         run: chmod +x gradlew
-      - name: 列出打包相关task
-        run: ./gradlew :mobile:tasks --group="Build"
+      - name: 列出mobile模块全部任务
+        run: ./gradlew :mobile:tasks --all
