@@ -1,4 +1,4 @@
-name: camry
+name: 打包测试camry
 on:
   workflow_dispatch:
 
@@ -15,7 +15,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: 把MFi证书写入assets目录（最简单方式）
+      - name: 把MFi证书写入assets目录
         run: |
           mkdir -p mobile/src/main/assets/offline-mfi
           echo "${{ secrets.MFI_PK8_BASE64 }}" | base64 -d > mobile/src/main/assets/offline-mfi/identity.pk8
@@ -24,11 +24,11 @@ jobs:
       - name: chmod
         run: chmod +x gradlew
 
-      - name: 编译Debug包
-        run: ./gradlew :mobile:clean :mobile:assembleDebug
+      - name: 编译Debug包（关闭友盟统计）
+        run: ./gradlew :mobile:clean :mobile:assembleDebug -Pdiplay.analytics=none
 
       - name: 上传APK
         uses: actions/upload-artifact@v4
         with:
-          name: camry
-          path: mobile/build/outputs/apk/debug/mobile-debug.apk
+          name: DiPlay-simple-debug
+          path: mobile/build/outputs/apk/debug/打包测试.apk
